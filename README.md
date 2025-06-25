@@ -1,6 +1,6 @@
-🧪 Projeto Pipex: Guia completo
+# 🧪 Projeto Pipex: Guia completo
 
-🧠 O que é o Pipex?
+## 🧠 O que é o Pipex?
 
 O projeto Pipex tem como objetivo te ensinar como funciona a comunicação entre processos no Unix, utilizando pipes, forks e execução de comandos, tudo em C puro.
 
@@ -8,14 +8,14 @@ Ele simula o seguinte comportamento do shell:
 shell:< infile comando1 | comando2 > outfile
 ./pipex infile "comando1" "comando2" outfile
 
-🎯 Objetivo do projeto
+## 🎯 Objetivo do projeto
 Criar um programa que:
 - Lê de um arquivo (infile)
 - Executa dois comandos em sequência, usando pipe entre eles:
 - A saída do primeiro vira a entrada do segundo
 - Escreve o resultado final num arquivo (outfile)
 
-🔧 Tecnologias e funções obrigatórias
+## 🔧 Tecnologias e funções obrigatórias
 Você deve usar:
 - open, close, read, write
 - pipe, dup2, fork, execve
@@ -26,7 +26,7 @@ Você não pode usar:
 - system()
 - popen(), execvp() e outros atalhos de execução
 
-🧱 Estrutura geral do programa
+## 🧱 Estrutura geral do programa
 int main(int argc, char **argv, char **envp)
  - Argumentos da linha de comando: int argc, char **argv
  - Variáveis de ambiente: char **envp
@@ -57,14 +57,14 @@ Encontrar o caminho do comando  dentro do PATH
 Usar execve() para executá-lo.
  - execve("/usr/bin/grep", cmd_args, envp);
 
-🧠 Conceitos que você aprende com o Pipex
+## 🧠 Conceitos que você aprende com o Pipex
 - Como processos filhos são criados com fork()
 - Como eles se comunicam com pipe()
 - Como substituir um processo com execve()
 - Como redirecionar entrada e saída com dup2()
 - Como a shell funciona por baixo dos panos
 
-🛟 Dicas finais
+## 🛟 Dicas finais
 - Teste com comandos que funcionam sozinhos no terminal!
 - Valide erros: arquivos que não existem, comandos inválidos...
 - Verifique se os descritores de ficheiro foram fechados corretamente!
