@@ -1,10 +1,32 @@
 # 🧪 Desmistificando o Pipex
 
-## 🧠 Conceito rápido:
-- dup2(origem, destino) redireciona o descritor destino para usar a origem.
+## 🧠 Conceito essenciais:
+### 🗃️ File descriptors
+- Representam arquivos e I/O (entrada/saída).
+	- 0 → STDIN_FILENO → entrada padrão (teclado)
+	- 1 → STDOUT_FILENO → saída padrão (terminal)
+	- 2 → STDERR_FILENO → saída de erro
+### 🔁 dup2(origem, destino)
+ - dup2(origem, destino) redireciona o descritor destino para usar a origem.
 	- Le da origem o que o destino quer
-- STDIN_FILENO → 0 → entrada padrão (normalmente teclado).
-- STDOUT_FILENO → 1 → saída padrão (normalmente terminal).
+### 🍴 fork()
+- Cria um novo processo filho.
+- Pai recebe pid > 0, filho recebe pid == 0.
+### 🧪 execve(path, args, env)
+- Substitui o processo atual por um novo processo.
+- Se funcionar, o processo atual deixa de existir — ele vira o novo programa.
+- Se falhar, usar perror() e exit(1).
+### 📬 pipe(pipefd)
+- pipefd[0] (read)
+- pipefd[1] (write)
+### ⏳ waitpid(pid, NULL, 0)
+- Espera o processo com aquele pid terminar.
+### 📂 Permissões e abertura de arquivos
+- open(const char *pathname, int flags, mode_t mode)
+	- O_RDONLY: Abrir somente para leitura
+	- O_WRONLY: Abrir somente para escrita
+	- O_CREAT: Criar o arquivo se ele não existir
+	- O_TRUNC: 	Se o arquivo já existir, apaga o conteúdo ao abrir
 
 ## 🔧 Função child1
 ```c
@@ -116,4 +138,65 @@ child2 ("wc -l"):
          ║    2    ║
          ╚═════════╝
 -----------------------------------
+```
+## 🔧 Função Pai - Pipex
+O processo pai  atua como o controlador do programa, responsável por preparar os arquivos, criar o pipe e os processos filhos.
+
+Validacao dos argumentos
+- argc tem que ser igual a 5
+```bash
+./pipex infile "cmd1" "cmd2" outfile
+  (1)    (2)     (3)   (4)     (5)
+```
+
+Criação do pipe
+```c
+pipe(pipefd);
+//pipefd[0]: para leitura
+//pipefd[1]: para escrita
+```
+Criar os processos filhos com fork()
+
+👶 primeiro filho - executa o comando 1
+```c
+pid1 = fork();
+if (pid1 == 0)
+	child1(infile, pipefd, argv[2], envp);
+```
+
+👶 segundo filho - executa o comando 2
+```c
+pid2 = fork();
+if (pid2 == 0)
+	child2(outfile, pipefd, argv[3], envp);
+```
+
+👨 Processo pai – Coordenação e espera
+```c
+// fecha as pipes pois nao vai utilizar mais
+close(pipefd[0]);
+close(pipefd[1]);
+// aguarda os dois filhos terminarem de executar
+// garante que o processo principal não finalize antes dos filhos
+waitpid(pid1, NULL, 0);
+waitpid(pid2, NULL, 0);
+```
+```bash
+         infile.txt
+             │
+             ▼
+   👶 Filho 1: [ grep hello ]
+             │
+      dup2 → pipefd[1]
+             ▼
+       ╔════════════╗
+       ║    PIPE    ║
+       ╚════════════╝
+             │
+      dup2 ← pipefd[0]
+             ▼
+   👶 Filho 2: [ wc -l ]   
+             │
+             ▼
+         outfile.txt
 ```
