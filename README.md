@@ -5,13 +5,15 @@
 O projeto Pipex tem como objetivo te ensinar como funciona a comunicação entre processos no Unix, utilizando pipes, forks e execução de comandos, tudo em C puro.
 
 Ele simula o seguinte comportamento do shell:
+```bash
 shell:< infile comando1 | comando2 > outfile
 ./pipex infile "comando1" "comando2" outfile
+```
 
 ## 🎯 Objetivo do projeto
 Criar um programa que:
 - Lê de um arquivo (infile)
-- Executa dois comandos em sequência, usando pipe entre eles:
+- Executa dois comandos em sequência, usando pipe entre eles
 - A saída do primeiro vira a entrada do segundo
 - Escreve o resultado final num arquivo (outfile)
 
