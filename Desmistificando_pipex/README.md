@@ -104,7 +104,7 @@ child2 ("wc -l"):
             ▼
       ╔═════════════╗
       ║    PIPE     ║
-	  ║ hello world ║  ← aqui passa só o texto com "hello"
+      ║ hello world ║  ← aqui passa só o texto com "hello"
       ║ hello again ║
       ╚═════════════╝
             ▼
