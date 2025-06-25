@@ -46,7 +46,8 @@ STDOUT (1) -> pipefd[1]
 4️⃣ execute_cmd(cmd, envp);
 
 - Executa o comando grep hello com o stdin vindo do arquivo e o stdout indo para o pipe.
-## 🔧 Função child1
+
+## 🔧 Função child2
 ```c
 void	child2(int outfile, int *pipefd, char *cmd, char **envp)
 {
