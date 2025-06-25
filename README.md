@@ -1,4 +1,10 @@
-# 🧪 Projeto Pipex: Guia completo
+# Pipex
+![C Language](https://img.shields.io/badge/language-C-blue.svg)
+![Status](https://img.shields.io/badge/status-finished-brightgreen)
+![42 100/100](https://img.shields.io/badge/42-100%2F100-gree?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+-
+## 🧪 Projeto Pipex: Guia completo
 
 ## 🧠 O que é o Pipex?
 
