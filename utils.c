@@ -1,26 +1,13 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/20 13:50:42 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/25 10:15:31 by sade-ara         ###   ########.fr       */
+/*   Created: 2025/06/25 10:10:59 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/06/25 10:10:59 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
-
-# include <unistd.h>
-# include <stdlib.h>
-# include <fcntl.h>
-# include <stdio.h>
-//# include <sys/wait.h>
-# include <string.h>
-
-char	**ft_split(char const *s, char c);
-
-#endif
-
+#include "pipex.h"
