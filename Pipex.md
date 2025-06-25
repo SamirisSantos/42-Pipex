@@ -1,4 +1,4 @@
-🧪 Projeto Pipex (42): Guia completo
+🧪 Projeto Pipex: Guia completo
 
 🧠 O que é o Pipex?
 
