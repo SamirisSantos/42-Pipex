@@ -91,6 +91,6 @@ void	execute_cmd(char *cmd_str, char **envp)
 	if (!cmd_path)
 		return (perror("ERROR_CMD"), 1);
 	execve(cmd_path, cmd_args, envp);
-	perror("FAILED");
+	perror("Failed");
 	exit(1);
 }
