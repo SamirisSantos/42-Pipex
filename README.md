@@ -49,13 +49,17 @@ Exemplo:
 - argv[4]: "outfile"
 
 Dividir o argv[2] e argv[3] usando ft_split()
+
 comando 1: "grep hello"
+
 char **cmd_args = ft_split("grep hello", ' ');
-cmd_args[0] = "grep"
-cmd_args[1] = "hello"
-cmd_args[2] = NULL
+
+- cmd_args[0] = "grep"
+- cmd_args[1] = "hello"
+- cmd_args[2] = NULL
 
 Encontrar o caminho do comando  dentro do PATH
+
 Usar execve() para executá-lo.
  - execve("/usr/bin/grep", cmd_args, envp);
 
