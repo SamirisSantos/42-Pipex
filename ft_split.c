@@ -6,13 +6,13 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:11:51 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/25 10:11:51 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/25 12:37:51 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-static int	ft_counteords(char const *s, char c)
+static int	ft_countwords(char const *s, char c)
 {
 	int	count;
 	int	in_word;
@@ -21,21 +21,21 @@ static int	ft_counteords(char const *s, char c)
 	i = 0;
 	count = 0;
 	in_word = 0;
-	while (*s)
+	while (s[i])
 	{
-		if (s[i])
-			in_word = 0;
-		else if (in_word == 0)
+		if (s[i] != c && in_word == 0)
 		{
 			in_word = 1;
 			count++;
 		}
+		else if (s[i] == c)
+			in_word = 0;
 		i++;
 	}
 	return (count);
 }
 
-static void	free_all(char **res, int i)
+void	free_all(char **res, int i)
 {
 	while (--i >= 0)
 		free (res[i]);

@@ -28,6 +28,9 @@ Você não pode usar:
 
 🧱 Estrutura geral do programa
 int main(int argc, char **argv, char **envp)
+ - Argumentos da linha de comando: int argc, char **argv
+ - Variáveis de ambiente: char **envp
+
 
 Argumentos:
 - argv[1]: nome do arquivo de entrada 
