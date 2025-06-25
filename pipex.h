@@ -22,7 +22,7 @@
 
 # define ERROR_OPEN "Error opening file\n"
 # define ERROR_CMD "command not found or invalid\n"
-# define ERROR_MSG "An error has occurred\n"# define ERROR_MSG
+# define ERROR_MSG "Error\n"
 
 
 char	**ft_split(char const *s, char c);
