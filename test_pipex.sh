@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Compila se necessário
-# make
+# Necessario fazer o make
 # de a permissao chmod +x test_pipex.sh
 # execute como ./test_pipex.sh
 # Cria ficheiro de entrada
