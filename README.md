@@ -78,6 +78,6 @@ Usar execve() para executá-lo.
 
 ## 🛟 Dicas finais
 - Teste com comandos que funcionam sozinhos no terminal!
-- Valide erros: arquivos que não existem, comandos inválidos...
+- Valide erros: arquivos que não existem, comandos inválidos, etc.
 - Verifique se os descritores de ficheiro foram fechados corretamente!
 - Usa valgrind para garantir que não há vazamentos de memória
