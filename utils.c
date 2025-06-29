@@ -12,7 +12,7 @@
 
 #include "pipex.h"
 
-static char	*get_path_env(char **envp)
+char	*get_path_env(char **envp)
 {
 	int		i;
 
@@ -26,7 +26,7 @@ static char	*get_path_env(char **envp)
 	return (NULL);
 }
 
-static char	*join_and_check(char *path, char *cmd)
+char	*join_and_check(char *path, char *cmd)
 {
 	char	*temp;
 	char	*full_path;
@@ -40,7 +40,7 @@ static char	*join_and_check(char *path, char *cmd)
 	return (NULL);
 }
 
-static void	ft_free(char **res)
+void	ft_free(char **res)
 {
 	int	i;
 
@@ -63,6 +63,8 @@ char	*get_cmd_path(char *cmd, char **envp)
 	path_env = get_path_env(envp);
 	if (!path_env)
 		return (NULL);
+	if (access(cmd, X_OK) == 0)
+		return (cmd);
 	paths = ft_split(path_env, ':');
 	i = 0;
 	while (paths[i])

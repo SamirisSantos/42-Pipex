@@ -61,7 +61,6 @@ char	*ft_strjoin(char const *s1, char const *s2)
 		return (0);
 	ft_memmove ((void *)strjoin, (const void *)s1, len_s1);
 	ft_memmove ((void *)strjoin + len_s1, (const void *)s2, len_s2 + 1);
-	strjoin[len_s1 + len_s2 + 1] = '\0';
 	return (strjoin);
 }
 // int main()

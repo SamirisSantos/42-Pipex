@@ -35,9 +35,9 @@ int		open_outfile(char *file);
 void	child1(int infile, int *pipefd, char *cmd, char **envp);
 void	child2(int outfile, int *pipefd, char *cmd, char **envp);
 
-static char	*get_path_env(char **envp);
-static char	*join_and_check(char *path, char *cmd);
-static void	ft_free(char **res);
+char	*get_path_env(char **envp);
+char	*join_and_check(char *path, char *cmd);
+void	ft_free(char **res);
 char	*get_cmd_path(char *cmd, char **envp);
 void	execute_cmd(char *cmd_str, char **envp);
 

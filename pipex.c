@@ -56,7 +56,7 @@ int	main(int argc, char **argv, char **envp)
 	pid_t	pid2;
 
 	if (argc != 5) // ./pipex(0) infile(1) "comando1"(2) "comando2"(3) outfile(4)
-		return (0);
+		return (1);
 	infile = open_infile(argv[1]);
 	outfile = open_outfile(argv[4]);
 	if (infile < 0 || outfile < 0 || pipe(pipefd) == -1)

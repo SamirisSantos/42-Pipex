@@ -10,3 +10,27 @@
 #                                                                              #
 # **************************************************************************** #
 
+NAME = pipex
+
+CC = cc
+CFLAGS = -Wall -Wextra -Werror
+RM = rm -rf
+
+SRCS = pipex.c utils.c ft_split.c ft_strjoin.c ft_strncmp.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+
+clean:
+	$(RM) $(OBJS)
+
+fclean: clean
+	$(RM) $(NAME)
+
+re: fclean all
+
+PHONY: all clean fclean re
