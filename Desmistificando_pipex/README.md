@@ -35,6 +35,8 @@ void	child1(int infile, int *pipefd, char *cmd, char **envp)
 	dup2(infile, STDIN_FILENO);      // entrada: infile
 	dup2(pipefd[1], STDOUT_FILENO);  // saída: escrita no pipe
 	close(pipefd[0]);                // fecha leitura do pipe
+	close(pipefd[1]);                // fecha escrita do pipe
+	close(infile);                   // fecha arquivo de entrada
 	execute_cmd(cmd, envp);          // executa grep hello
 }
 ```
@@ -75,7 +77,9 @@ void	child2(int outfile, int *pipefd, char *cmd, char **envp)
 {
 	dup2(pipefd[0], STDIN_FILENO);     // entrada: leitura do pipe
 	dup2(outfile, STDOUT_FILENO);     // saída: arquivo de saída
-	close(pipefd[1]);                 // fecha escrita do pipe
+	close(pipefd[0]);                // fecha leitura do pipe
+	close(pipefd[1]);                // fecha escrita do pipe
+	close(outfile);                  // fecha arquivo de saída
 	execute_cmd(cmd, envp);           // executa wc -l
 }
 ```
@@ -199,4 +203,98 @@ waitpid(pid2, NULL, 0);
              │
              ▼
          outfile.txt
+```
+## Comportamento das funções no utils.c
+```c
+char	*get_path_env(char **envp);
+char	*join_and_check(char *path, char *cmd);
+char	*get_cmd_path(char *cmd, char **envp);
+void	execute_cmd(char *cmd_str, char **envp);
+```
+1️⃣ O **pipex** executa um comando (ex: "grep hello"), e **execute_cmd**
+
+2️⃣ O **get_path_env** localizar o valor da variável **PATH** no ambiente
+```c
+envp[0] = "USER=user"
+envp[1] = "PATH=/usr/local/bin:/usr/bin:/bin"
+
+//retorno: "/usr/local/bin:/usr/bin:/bin"
+```
+3️⃣ O **join_and_check** juntar um diretório com o nome do comando, no exemplo ele verificaria se grep existe, e verificar se o executável existe.
+```c
+path = "/usr/bin"
+cmd  = "grep"
+-------------------
+//ver e verifixa
+ft_strjoin("/usr/bin", "/") + ft_strjoin(..., "grep") → "/usr/bin/grep"
+access("/usr/bin/grep", X_OK)
+```
+4️⃣ O **get_cmd_path** pega o caminho do executavel e testa os diretorios
+```c
+cmd = "grep"
+-------------------
+//retorno "/usr/bin/grep" 
+```
+5️⃣ O **execute_cmd** executá-lo com execve
+```c
+cmd_str = "grep hello"
+```
+✅ Fluxo
+```c
+execute_cmd("grep hello", envp)
+   └─▶ ft_split → ["grep", "hello", NULL]
+        └─▶ get_cmd_path("grep", envp)
+             └─▶ get_path_env(envp) → "/usr/bin:/bin:..."
+             └─▶ ft_split(PATH)
+             └─▶ join_and_check(dir, "grep") → "/usr/bin/grep"
+        └─▶ execve("/usr/bin/grep", ["grep", "hello", NULL], envp)
+```
+Outra visualização
+```bash
+ ./pipex infile.txt "grep hello" "wc -l" outfile
+ argv[0] = ./pipex
+ argv[1] = infile
+ argv[2] = "grep hello"
+ argv[3] = "wc -l"
+ argv[4] = outfile.txt
+--------------------------
+argv[2] = "grep hello"
+       │
+       ▼
+void execute_cmd("grep hello", envp)
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ ft_split("grep hello", ' ')             │
+│ → cmd_args = ["grep", "hello", NULL]    │
+└─────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ get_cmd_path(cmd_args[0], envp)         │
+│ → chama get_path_env(envp)              │
+└─────────────────────────────────────────┘
+       │
+       ▼
+path_env = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+       │
+       ▼
+ft_split(path_env, ':')
+→ paths = ["/usr/local/bin", "/usr/bin", "/bin", ...]
+       │
+       ▼
+Loop com join_and_check:
+───────────────────────────────────────────────
+i = 0 → "/usr/local/bin/grep" → ❌
+i = 1 → "/usr/bin/grep"       → ✅ encontrado!
+───────────────────────────────────────────────
+       │
+       ▼
+Retorna: "/usr/bin/grep"
+       │
+       ▼
+execve("/usr/bin/grep", ["grep", "hello", NULL], envp)
+       │
+       ▼
+Substitui o processo atual pelo comando grep
 ```
