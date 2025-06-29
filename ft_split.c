@@ -68,7 +68,7 @@ static int	split_insert_word(char **res, char const *s, char c)
 
 	i = 0;
 	j = 0;
-	while (*s)
+	while (s[i])
 	{
 		if (s[i] != c && (i == 0 || s[i - 1] == c))
 		{

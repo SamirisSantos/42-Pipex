@@ -29,18 +29,21 @@ char	**ft_split(char const *s, char c);
 char	*ft_strjoin(char const *s1, char const *s2);
 void	*ft_memmove(void *dest, const void *src, size_t n);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
+char	*ft_strdup(const char *s1);
+void	ft_free(char **arr);
 
 int		open_infile(char *file);
 int		open_outfile(char *file);
-void	child1(int infile, int *pipefd, char *cmd, char **envp);
-void	child2(int outfile, int *pipefd, char *cmd, char **envp);
-
 char	*get_path_env(char **envp);
 char	*join_and_check(char *path, char *cmd);
-void	ft_free(char **res);
 char	*get_cmd_path(char *cmd, char **envp);
 void	execute_cmd(char *cmd_str, char **envp);
+char	*ft_strchr(const char *s, int c);
 
+void	clear_and_error_exit(int infile, int outfile);
+void	child1(int infile, int *pipefd, char *cmd, char **envp);
+void	child2(int outfile, int *pipefd, char *cmd, char **envp);
+void	parent_clean_and_wait(int *pipe_fds, int infile, int outfile, pid_t pid1, pid_t pid2);
 
 #endif
 

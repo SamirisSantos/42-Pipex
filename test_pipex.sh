@@ -43,5 +43,5 @@ echo -e "\n🔎 Teste 6 – infile inexistente"
 echo -n "Resultado: "
 cat outfile.txt
 
-# Limpeza
+# exclui depois do teste
 rm -f infile.txt outfile.txt

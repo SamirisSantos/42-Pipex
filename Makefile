@@ -16,7 +16,7 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
-SRCS = pipex.c utils.c ft_split.c ft_strjoin.c ft_strncmp.c
+SRCS = pipex.c utils.c ft_split.c ft_strjoin.c ft_strncmp.c child_process.c
 
 OBJS = $(SRCS:.c=.o)
 

@@ -64,7 +64,7 @@ char	*get_cmd_path(char *cmd, char **envp)
 	if (!path_env)
 		return (NULL);
 	if (access(cmd, X_OK) == 0)
-		return (cmd);
+		return (ft_strdup(cmd));
 	paths = ft_split(path_env, ':');
 	i = 0;
 	while (paths[i])
@@ -89,16 +89,42 @@ void	execute_cmd(char *cmd_str, char **envp)
 	cmd_args = ft_split(cmd_str, ' ');
 	if (!cmd_args || !cmd_args[0])
 	{
+		ft_free(cmd_args); 
 		perror("ERROR_CMD");
-		exit(1);
+		exit(127);
 	}
+	
 	cmd_path = get_cmd_path(cmd_args[0], envp);
 	if (!cmd_path)
 	{
+		ft_free(cmd_args);
 		perror("ERROR_CMD");
-		exit(1);
+		exit(127); 
 	}
+	
 	execve(cmd_path, cmd_args, envp);
-	perror("Failed");
+	perror("pipex"); 
+	ft_free(cmd_args);
+	free(cmd_path);
+	exit(127);
+}
+void	clear_and_error_exit(int infile, int outfile)
+{
+	if (infile != -1)
+		close(infile);
+	if (outfile != -1)
+		close(outfile);
+	perror("ERROR_MSG");
 	exit(1);
 }
+
+void	parent_clean_and_wait(int *pipe_fds, int infile, int outfile, pid_t pid1, pid_t pid2)
+{
+	close(pipe_fds[0]);
+	close(pipe_fds[1]);
+	close(infile);
+	close(outfile);
+	waitpid(pid1, NULL, 0);
+	waitpid(pid2, NULL, 0);
+}
+

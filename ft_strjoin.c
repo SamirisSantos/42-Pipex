@@ -48,6 +48,19 @@ void	*ft_memmove(void *dest, const void *src, size_t n)
 	return (dest);
 }
 
+char	*ft_strdup(const char *s1)
+{
+	char	*dup;
+	size_t	len;
+
+	len = ft_strlen(s1);
+	dup = (char *)malloc(sizeof(char) * (len + 1));
+	if (!dup)
+		return (NULL);
+	ft_memmove(dup, s1, len + 1);
+	return (dup);
+}
+
 char	*ft_strjoin(char const *s1, char const *s2)
 {
 	size_t	len_s1;
