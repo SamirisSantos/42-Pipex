@@ -86,10 +86,16 @@ void	execute_cmd(char *cmd_str, char **envp)
 
 	cmd_args = ft_split(cmd_str, ' ');
 	if (!cmd_args || !cmd_args[0])
-		return (perror("ERROR_CMD"), 1);
+	{
+		perror("ERROR_CMD");
+		exit(1);
+	}
 	cmd_path = get_cmd_path(cmd_args[0], envp);
 	if (!cmd_path)
-		return (perror("ERROR_CMD"), 1);
+	{
+		perror("ERROR_CMD");
+		exit(1);
+	}
 	execve(cmd_path, cmd_args, envp);
 	perror("Failed");
 	exit(1);

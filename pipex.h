@@ -17,16 +17,18 @@
 # include <stdlib.h>
 # include <fcntl.h>
 # include <stdio.h>
-//# include <sys/wait.h>
+# include <sys/wait.h>
 # include <string.h>
 
 # define ERROR_OPEN "Error opening file\n"
 # define ERROR_CMD "command not found or invalid\n"
 # define ERROR_MSG "Error\n"
 
-
+size_t	ft_strlen(const char *c);
 char	**ft_split(char const *s, char c);
 char	*ft_strjoin(char const *s1, char const *s2);
+void	*ft_memmove(void *dest, const void *src, size_t n);
+int		ft_strncmp(const char *s1, const char *s2, size_t n);
 
 int		open_infile(char *file);
 int		open_outfile(char *file);

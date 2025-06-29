@@ -12,6 +12,42 @@
 
 #include "pipex.h"
 
+size_t	ft_strlen(const char *c)
+{
+	int	i;
+
+	i = 0;
+	while (c[i] != '\0')
+	{
+		i++;
+	}
+	return (i);
+}
+
+void	*ft_memmove(void *dest, const void *src, size_t n)
+{
+	size_t		i;
+	char		*d;
+	const char	*s;
+
+	d = dest;
+	s = src;
+	if (!dest && !src)
+		return (NULL);
+	i = 0;
+	while ((d < s) && (i < n))
+	{
+		d[i] = s[i];
+		i++;
+	}
+	while ((d > s) && (n > 0))
+	{
+		n--;
+		d[n] = s[n];
+	}
+	return (dest);
+}
+
 char	*ft_strjoin(char const *s1, char const *s2)
 {
 	size_t	len_s1;
