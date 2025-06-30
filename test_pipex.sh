@@ -11,7 +11,9 @@ another hello line
 goodbye
 HELLO in uppercase
 EOF
+touch empty.txt
 
+echo -e "BASIC CHECKS\n"
 echo -e "\n🔎 Teste 1 – grep hello | wc -l"
 ./pipex infile.txt "grep hello" "wc -l" outfile.txt
 echo -n "Resultado: "
@@ -27,8 +29,8 @@ echo -e "\n🔎 Teste 3 – grep nothing | wc -l"
 echo -n "Resultado: "
 cat outfile.txt
 
-echo -e "\n🔎 Teste 4 – comando inválido"
-./pipex infile.txt "falso_cmd" "wc -l" outfile.txt
+echo -e "\n🔎 Teste 4 – grep nothing | wc -l"
+./pipex empty.txt "grep nothing" "wc -l" outfile.txt
 echo -n "Resultado: "
 cat outfile.txt
 
@@ -37,10 +39,16 @@ echo -e "\n🔎 Teste 5 – tr A-Z | grep HELLO"
 echo "Resultado:"
 cat outfile.txt
 
-echo -e "\n🔎 Teste 6 – infile inexistente"
+echo -e "ERROR CHECKING\n"
+echo -e "\n🔎 Teste 6 – comando inválido"
+./pipex infile.txt "falso_cmd" "wc -l" outfile.txt
+echo -n "Resultado: "
+cat outfile.txt
+
+echo -e "\n🔎 Teste 7 – infile inexistente"
 ./pipex naoexiste.txt "cat" "wc -l" outfile.txt
 echo -n "Resultado: "
 cat outfile.txt
 
 # exclui depois do teste
-rm -f infile.txt outfile.txt
+rm -f infile.txt outfile.txt empty.txt

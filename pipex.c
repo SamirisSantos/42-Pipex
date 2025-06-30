@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:53 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 12:00:06 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 13:35:04 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,11 +35,17 @@ int	open_outfile(char *file)
 void	clear_and_error_exit(int infile, int outfile)
 {
 	if (infile != -1)
+	{
 		close(infile);
+		perror(ERROR_MSG);
+		exit(1);
+	}
 	if (outfile != -1)
+	{
 		close(outfile);
-	perror(ERROR_MSG);
-	exit(1);
+		perror(ERROR_MSG);
+		exit(1);
+	}
 }
 
 void	parent_clean(int *pipe_fds, int infile, int outfile)

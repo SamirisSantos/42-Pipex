@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:10:59 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 11:39:07 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 13:55:55 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,5 +104,5 @@ void	execute_cmd(char *cmd_str, char **envp)
 	perror("pipex");
 	ft_free(cmd_args);
 	free(cmd_path);
-	exit(127);
+	exit(1);
 }

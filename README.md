@@ -81,3 +81,17 @@ Usar execve() para executá-lo.
 - Valide erros: arquivos que não existem, comandos inválidos, etc.
 - Verifique se os descritores de ficheiro foram fechados corretamente!
 - Usa valgrind para garantir que não há vazamentos de memória
+```bash
+valgrind ./pipex
+```
+- Saida do valgrind:
+```bash
+==XXXXX== HEAP SUMMARY:
+==XXXXX==     in use at exit: 0 bytes in 0 blocks
+==XXXXX==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==XXXXX== 
+==XXXXX== All heap blocks were freed -- no leaks are possible
+==XXXXX== 
+==XXXXX== For lists of detected and suppressed errors, rerun with: -s
+==XXXXX== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
