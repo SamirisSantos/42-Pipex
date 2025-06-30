@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/29 14:20:16 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/29 14:20:16 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 11:25:23 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,4 +31,3 @@ void	child2(int outfile, int *pipefd, char *cmd, char **envp)
 	close(outfile);
 	execute_cmd(cmd, envp);
 }
-

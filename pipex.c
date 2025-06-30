@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:53 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/20 13:50:54 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 11:25:15 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ int	open_infile(char *file)
 
 	fd = open(file, O_RDONLY);
 	if (fd < 0)
-		perror("ERROR_OPEN");
+		perror(ERROR_OPEN);
 	return (fd);
 }
 
@@ -28,7 +28,7 @@ int	open_outfile(char *file)
 
 	fd = open(file, O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	if (fd < 0)
-		perror("ERROR_OPEN");
+		perror(ERROR_OPEN);
 	return (fd);
 }
 
@@ -42,14 +42,12 @@ int	main(int argc, char **argv, char **envp)
 
 	if (argc != 5)
 		return (1);
-
 	infile = open_infile(argv[1]);
 	outfile = open_outfile(argv[4]);
 	if (infile < 0 || outfile < 0)
 		return (1);
 	if (pipe(pipe_fds) == -1)
 		clear_and_error_exit(infile, outfile);
-
 	pid1 = fork();
 	if (pid1 < 0)
 		clear_and_error_exit(infile, outfile);
@@ -61,6 +59,6 @@ int	main(int argc, char **argv, char **envp)
 		clear_and_error_exit(infile, outfile);
 	if (pid2 == 0)
 		child2(outfile, pipe_fds, argv[3], envp);
-	parent_clean_and_wait(pipe_fds, infile, outfile, pid1, pid2); 
+	parent_clean_and_wait(pipe_fds, infile, outfile, pid1, pid2);
 	return (0);
 }

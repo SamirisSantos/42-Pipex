@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:10:59 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/25 10:10:59 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 11:24:21 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ void	execute_cmd(char *cmd_str, char **envp)
 	if (!cmd_args || !cmd_args[0])
 	{
 		ft_free(cmd_args); 
-		perror("ERROR_CMD");
+		perror(ERROR_CMD);
 		exit(127);
 	}
 	
@@ -98,7 +98,7 @@ void	execute_cmd(char *cmd_str, char **envp)
 	if (!cmd_path)
 	{
 		ft_free(cmd_args);
-		perror("ERROR_CMD");
+		perror(ERROR_CMD);
 		exit(127); 
 	}
 	
@@ -114,7 +114,7 @@ void	clear_and_error_exit(int infile, int outfile)
 		close(infile);
 	if (outfile != -1)
 		close(outfile);
-	perror("ERROR_MSG");
+	perror(ERROR_MSG);
 	exit(1);
 }
 
