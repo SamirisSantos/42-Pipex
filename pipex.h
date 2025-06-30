@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:42 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 11:24:10 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 12:00:20 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,10 +41,10 @@ void	execute_cmd(char *cmd_str, char **envp);
 char	*ft_strchr(const char *s, int c);
 
 void	clear_and_error_exit(int infile, int outfile);
+void	wait_child(pid_t pid1, pid_t pid2);
+void	child_error_exit(pid_t pid, int infile, int outfile);
 void	child1(int infile, int *pipefd, char *cmd, char **envp);
 void	child2(int outfile, int *pipefd, char *cmd, char **envp);
-void	child_process(pid_t *pid1, pid_t *pid2, int infile, int outfile, int pipe_fds[2], char **argv, char **envp);
-void	parent_clean_and_wait(int *pipe_fds, int infile, int outfile, pid_t pid1, pid_t pid2);
+void	parent_clean(int *pipe_fds, int infile, int outfile);
 
 #endif
-

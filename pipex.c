@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:53 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 11:25:15 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 12:00:06 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,24 @@ int	open_outfile(char *file)
 	return (fd);
 }
 
+void	clear_and_error_exit(int infile, int outfile)
+{
+	if (infile != -1)
+		close(infile);
+	if (outfile != -1)
+		close(outfile);
+	perror(ERROR_MSG);
+	exit(1);
+}
+
+void	parent_clean(int *pipe_fds, int infile, int outfile)
+{
+	close(pipe_fds[0]);
+	close(pipe_fds[1]);
+	close(infile);
+	close(outfile);
+}
+
 int	main(int argc, char **argv, char **envp)
 {
 	int		pipe_fds[2];
@@ -49,16 +67,14 @@ int	main(int argc, char **argv, char **envp)
 	if (pipe(pipe_fds) == -1)
 		clear_and_error_exit(infile, outfile);
 	pid1 = fork();
-	if (pid1 < 0)
-		clear_and_error_exit(infile, outfile);
+	child_error_exit(pid1, infile, outfile);
 	if (pid1 == 0)
 		child1(infile, pipe_fds, argv[2], envp);
-
 	pid2 = fork();
-	if (pid2 < 0)
-		clear_and_error_exit(infile, outfile);
+	child_error_exit(pid2, infile, outfile);
 	if (pid2 == 0)
 		child2(outfile, pipe_fds, argv[3], envp);
-	parent_clean_and_wait(pipe_fds, infile, outfile, pid1, pid2);
+	parent_clean(pipe_fds, infile, outfile);
+	wait_child(pid1, pid2);
 	return (0);
 }
