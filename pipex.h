@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:42 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 12:00:20 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/06/30 14:15:10 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,8 @@
 # include <string.h>
 
 # define ERROR_OPEN "Error opening or invalid file\n"
-# define ERROR_CMD "command not found or invalid\n"
+# define ERROR_NOT_PER "Not permission\n"
+# define ERROR_CMD "Command not found or invalid\n"
 # define ERROR_MSG "Error\n"
 
 size_t	ft_strlen(const char *c);
