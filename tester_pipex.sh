@@ -1,8 +1,4 @@
 #! /bin/bash
-# de a permissao chmod +x tester_pipex.sh
-# execute como ./tester_pipex.sh -m mandatory
-# execute como ./tester_pipex.sh -mb mandatory + bonus
-#autor https://github.com/bastienkody/pipex_tester?tab=readme-ov-file
 
 # bonus info config (CHANGE HERE if your bonus exec/rule is not 'pipex')
 pipex_bonus=pipex
@@ -539,7 +535,7 @@ main_proc=$(cat vlg.txt | grep -m3 -A 1 "HEAP SUMMARY" | tail -n1 | egrep -o "[0
 fd=$(cat vlg.txt | grep -o  "Open file descriptor [0-9]*:" | sort | uniq | wc -l | tr -d "[:blank:]")
 main_fd_open=$(cat vlg.txt | grep -m3 "FILE DESCRIPTORS:" | tail -n1 | egrep -o "[0-9]* open" | egrep -o "[0-9]*")
 main_fd_std=$(cat vlg.txt | grep -m3 "FILE DESCRIPTORS:" | tail -n1 | egrep -o "[0-9]* std" | egrep -o "[0-9]*")
-main_fd=$(( $main_fd_open - $main_fd_std ))
+main_fd=$(( $main_fd_open $main_fd_std ))
 [[ $first_proc -eq 0 ]] && echo -ne "${GREEN}no leak catiop${END}" || echo -ne "${RED}$first_proc leaks  catiop${END}"
 [[ $second_proc -eq 0 ]] && echo -ne "${GREEN} - no leak empty cmd${END}" || echo -ne "${RED} - $second_proc leaks empty cmd${END}"
 [[ $main_proc -eq 0 ]] && echo -ne "${GREEN} - no leak main${END}" || echo -ne "${RED} - $main_proc leaks main${END}"
@@ -582,9 +578,7 @@ $! refers to the pid of the last pipeline launched in bg
 END_COMMENT
 
 echo -e "${BLU_BG}Zombies (children process not waited by pipex):${END}"
-rm -rf *top_result zombies_test*
-
-gcc -o popo popo.c
+rm -rf *top_result zombies_test* 
 
 echo -ne "Test 1 : ./pipex Makefile \"sleep 3\" \"sleep 1\" outf \t\t\t--> "
 start_Z_nb=$(top -bn1 | head -n2 | egrep -o "[0-9]* zombie$" | egrep -o "[0-9]*")
@@ -595,7 +589,7 @@ ps -aux | grep Z | grep -vi grep > zombie_test1
 kill -s SIGTERM $! > /dev/null 2>&1 || kill -s SIGKILL $! > /dev/null 2>&1
 [[ $(( $exec_Z_nb - $start_Z_nb )) -eq 0 ]] && echo -e "${GREEN}OK (sleep 1 did not became a zombie)${END}" && rm -f zombie_test1
 [[ $(( $exec_Z_nb - $start_Z_nb )) -gt 0 ]] && echo -e "${YEL}KO: $(( $exec_Z_nb - $start_Z_nb )) process became zombie before pipex returned (most probably sleep 1, please check 'zombie_test1')${END}"
-rm -f outf
+rm -f outf zombie_test1
 
 echo -ne "Test 2 : ./pipex Makefile \"sleep 1\" \"sleep 3\" outf \t\t\t--> "
 start_Z_nb=$(top -bn1 | head -n2 | egrep -o "[0-9]* zombie$" | egrep -o "[0-9]*")
@@ -971,6 +965,7 @@ cat err | grep -i "open" | grep -qi "files" && echo -ne "${GREEN}(err msg with o
 cat err | egrep -qi "segfault|segmentation|core ?dump" && echo -e "${RED}SUPER KO segfault${END}" || echo -e "${GREEN}(no segfault)${END}"
 rm -f outf err
 
+rm -f vlg.txt
 fi
 
 # end

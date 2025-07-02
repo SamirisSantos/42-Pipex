@@ -17,6 +17,8 @@ char	*get_path_env(char **envp)
 	int		i;
 
 	i = 0;
+	if (!envp)
+		return (NULL);
 	while (envp[i])
 	{
 		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
@@ -32,8 +34,12 @@ char	*join_and_check(char *path, char *cmd)
 	char	*full_path;
 
 	temp = ft_strjoin(path, "/");
+	if (!temp)
+		return (NULL);
 	full_path = ft_strjoin(temp, cmd);
 	free(temp);
+	if (!full_path)
+		return (NULL);
 	if (access(full_path, X_OK) == 0)
 		return (full_path);
 	free(full_path);
@@ -90,19 +96,19 @@ void	execute_cmd(char *cmd_str, char **envp)
 	if (!cmd_args || !cmd_args[0])
 	{
 		ft_free(cmd_args);
-		perror(ERROR_CMD);
-		exit(127);
+		msg_cmd_not_found(cmd_str);
 	}
 	cmd_path = get_cmd_path(cmd_args[0], envp);
 	if (!cmd_path)
 	{
 		ft_free(cmd_args);
-		perror(ERROR_CMD);
-		exit(127);
+		msg_cmd_not_found(cmd_str);
 	}
 	execve(cmd_path, cmd_args, envp);
 	perror("pipex");
 	ft_free(cmd_args);
 	free(cmd_path);
-	exit(1);
+	if (errno == EACCES)
+		exit(126);
+	exit(127);
 }

@@ -32,14 +32,18 @@ void	child2(int outfile, int *pipefd, char *cmd, char **envp)
 	execute_cmd(cmd, envp);
 }
 
-void	child_error_exit(pid_t pid, int infile, int outfile)
-{
-	if (pid < 0)
-		clear_and_error_exit(infile, outfile);
-}
-
 void	wait_child(pid_t pid1, pid_t pid2)
 {
-	waitpid(pid1, NULL, 0);
-	waitpid(pid2, NULL, 0);
+	int	status_child1;
+	int	status_child2;
+	int	exit_code;
+
+	exit_code = 0;
+	waitpid(pid1, &status_child1, 0);
+	waitpid(pid2, &status_child2, 0);
+	if (WIFEXITED(status_child1) && WEXITSTATUS(status_child1) != 0)
+		exit_code = WEXITSTATUS(status_child1);
+	if (WIFEXITED(status_child2) && WEXITSTATUS(status_child2) != 0)
+		exit_code = WEXITSTATUS(status_child2);
+	exit(exit_code);
 }
