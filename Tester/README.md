@@ -1,5 +1,12 @@
-# Pipex_tester
+# Pipex_tester_mandatory
 
+- Adicione o arquivo test_pipex.sh na pasta do projeto
+- Altere a permissao test_pipex.sh
+- Execute ./test_pipex.sh
+
+```bash
+#Criar uma copia
+````
 ## Saidas de Error
 ### 📂 Erros nos arquivos
 
