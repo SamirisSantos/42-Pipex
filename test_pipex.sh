@@ -335,5 +335,160 @@ fi
 # Teste PATH cmd
 echo -ne "\n${BLU_BG} Teste PATH cmd: ${RESET}\n"
 
+# Teste 1: cmd1 e cmd2 PATH existe
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: cmd1 e cmd2 PATH existe      ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 0 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(0) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 1: cmd1 e cmd2 PATH existe      ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "no suh file or directory" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada No such file or directory${RESET}"
+fi
+
+# Teste 2: cmd1 PATH não existe
+./pipex infile.txt "/usr/bin/les" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 2: cmd1 PATH não existe         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 2: cmd1 PATH não existe         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "no suh file or directory" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada No such file or directory${RESET}"
+fi
+
+# Teste 3: cmd2 PATH não existe
+./pipex infile.txt "/usr/bin/cat" "/usr/bin/outro" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 3: cmd2 PATH não existe         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 1 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 3: cmd2 PATH não existe         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "no suh file or directory" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada No such file or directory${RESET}"
+fi
+
+# Teste 4: PATH sem acesso
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/outro" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 4: PATH sem acesso              ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 2 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(2) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 4: PATH sem acesso              ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "cannot access" stderr.txt && grep -iq "no suh file or directory" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL} cannot access No such file or directory${RESET}"
+fi
+
 rm -f infile.txt outfile.txt stdout.txt stderr.txt oi.txt teste.txt
+
+# Teste infile sem leitura
+echo -ne "\n${BLU_BG} Teste infile sem leitura: ${RESET}\n"
+
+# Cria o infile.txt
+cat <<EOF > infile.txt
+hello world
+Here is some content
+hello world
+EOF
+chmod a-r infile.txt
+
+# Teste 1: infile sem permissao escrita
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: infile sem permissao escrita         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -eq 1 || $exit_code -eq 13 ]]; then
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	else
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) ou exit(13) esperado${RESET}"
+	fi
+	else
+		echo -ne "Teste 1: infile sem permissao escrita         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "permission denied" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada permission denied${RESET}"
+fi
+
+rm -f infile.txt outfile.txt stdout.txt stderr.txt
+
+# Teste outfile sem escrita
+echo -ne "\n${BLU_BG} Teste infile sem escrita: ${RESET}\n"
+
+# Cria o infile.txt
+cat <<EOF > infile.txt
+hello world
+Here is some content
+hello world
+EOF
+
+# Teste 1: outfile sem permissao escrita
+touch outfile.txt
+chmod a-w outfile.txt
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: outfile sem permissao escrita         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -eq 1 || $exit_code -eq 13 ]]; then
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	else
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) ou exit(13) esperado${RESET}"
+	fi
+	else
+		echo -ne "Teste 1: outfile sem permissao escrita         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "permission denied" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada permission denied${RESET}"
+fi
+
+rm -f infile.txt stdout.txt stderr.txt
+
+rm -f infile.txt outfile.txt stdout.txt stderr.txt
 make clean > /dev/null 2>&1
