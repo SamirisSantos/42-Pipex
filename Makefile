@@ -6,7 +6,7 @@
 #    By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/06/20 13:49:55 by sade-ara          #+#    #+#              #
-#    Updated: 2025/06/30 12:52:17 by sade-ara         ###   ########.fr        #
+#    Updated: 2025/07/04 14:53:33 by sade-ara         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
-SRCS = pipex.c utils.c msg.c ft_split.c ft_strjoin.c ft_strncmp.c child_process.c
+SRCS = pipex.c utils.c msg.c ft_split.c ft_strjoin.c ft_strncmp.c ft_strch.c child_process.c execute_cmd.c
 
 OBJS = $(SRCS:.c=.o)
 

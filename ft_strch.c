@@ -1,34 +1,40 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   msg.c                                              :+:      :+:    :+:   */
+/*   ft_strch.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/01 15:04:03 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/07/04 14:44:01 by sade-ara         ###   ########.fr       */
+/*   Created: 2025/07/04 14:12:22 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 14:13:59 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	error_and_exit(char *msg)
+char	*ft_strchr(const char *s, int c)
 {
-	perror(msg);
-	exit(EXIT_FAILURE);
-}
+	int	i;
 
-void	msg_cmd_not_found(char *cmd)
-{
-	write(STDERR_FILENO, "Command '", 9);
-	write(STDERR_FILENO, cmd, ft_strlen(cmd));
-	write(STDERR_FILENO, "' not found.\n", 14);
-	exit(127);
+	i = 0;
+	while (s[i] != '\0')
+	{
+		if (s[i] == (char) c)
+		{
+			return ((char *)&s[i]);
+		}
+		else
+			i++;
+	}
+	if ((char)c == '\0')
+	{
+		return ((char *)&s[i]);
+	}
+	return (0);
 }
-
-void	msg_cmd_not_file(char *cmd)
-{
-	write(STDERR_FILENO, cmd, ft_strlen(cmd));
-	write(STDERR_FILENO, " No such file or directory. \n", 30);
-	exit(127);
-}
+// int main()
+// {
+//     char str[] = "42 Porto";
+//     char *s = ft_strchr(str, 'P');
+//     printf("%s \n", s);
+// }

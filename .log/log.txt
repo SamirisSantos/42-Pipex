@@ -1,0 +1,1293 @@
+=== start of child_process.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   child_process.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/29 14:20:16 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 14:59:21 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+void	child1(int infile, int *pipefd, char *cmd, char **envp)
+{
+	close(pipefd[0]);
+	dup2(infile, STDIN_FILENO);
+	dup2(pipefd[1], STDOUT_FILENO);
+	close(infile);
+	close(pipefd[1]);
+	execute_cmd(cmd, envp);
+}
+
+void	child2(int outfile, int *pipefd, char *cmd, char **envp)
+{
+	close(pipefd[1]);
+	dup2(pipefd[0], STDIN_FILENO);
+	dup2(outfile, STDOUT_FILENO);
+	close(outfile);
+	close(pipefd[0]);
+	execute_cmd(cmd, envp);
+}
+
+void	wait_child(pid_t pid1, pid_t pid2)
+{
+	int	status_child1;
+	int	status_child2;
+	int	exit_code;
+
+	exit_code = 0;
+	waitpid(pid1, &status_child1, 0);
+	waitpid(pid2, &status_child2, 0);
+	if (WIFEXITED(status_child1) && WEXITSTATUS(status_child1) != 0)
+		exit_code = WEXITSTATUS(status_child1);
+	if (WIFEXITED(status_child2) && WEXITSTATUS(status_child2) != 0)
+		exit_code = WEXITSTATUS(status_child2);
+	exit(exit_code);
+}
+=== end of child_process.c ===
+=== start of execute_cmd.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_cmd.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/04 14:52:00 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 15:18:02 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+static void	handle_cmd_with_path(char *cmd_str, char **cmd_args)
+{
+	if (access(cmd_args[0], X_OK) != 0)
+	{
+		msg_cmd_not_file(cmd_str);
+		ft_free(cmd_args);
+		exit(127);
+	}
+}
+
+static char	**parse_command(char *cmd_str)
+{
+	char	**args;
+
+	args = ft_split(cmd_str, ' ');
+	if (!args || !args[0])
+	{
+		ft_free(args);
+		msg_cmd_not_found(cmd_str);
+	}
+	return (args);
+}
+
+void	execute_cmd(char *cmd_str, char **envp)
+{
+	char	**cmd_args;
+	char	*cmd_path;
+
+	cmd_args = parse_command(cmd_str);
+	if (ft_strchr(cmd_args[0], '/'))
+		handle_cmd_with_path(cmd_str, cmd_args);
+	cmd_path = get_cmd_path(cmd_args[0], envp);
+	if (!cmd_path)
+	{
+		ft_free(cmd_args);
+		msg_cmd_not_found(cmd_str);
+	}
+	execve(cmd_path, cmd_args, envp);
+	perror("pipex");
+	ft_free(cmd_args);
+	free(cmd_path);
+	if (errno == EACCES)
+		exit(126);
+	exit(1);
+}
+=== end of execute_cmd.c ===
+=== start of ft_split.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_split.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/25 10:11:51 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/06/25 12:37:51 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+static int	ft_countwords(char const *s, char c)
+{
+	int	count;
+	int	in_word;
+	int	i;
+
+	i = 0;
+	count = 0;
+	in_word = 0;
+	while (s[i])
+	{
+		if (s[i] != c && in_word == 0)
+		{
+			in_word = 1;
+			count++;
+		}
+		else if (s[i] == c)
+			in_word = 0;
+		i++;
+	}
+	return (count);
+}
+
+void	free_all(char **res, int i)
+{
+	while (--i >= 0)
+		free (res[i]);
+	free (res);
+}
+
+static char	*copy_word(const char *s, int start, int len)
+{
+	char	*word;
+	int		i;
+
+	word = malloc(sizeof(char) * (len + 1));
+	if (!word)
+		return (NULL);
+	i = 0;
+	while (i < len)
+	{
+		word[i] = s[start + i];
+		i++;
+	}
+	word[i] = '\0';
+	return (word);
+}
+
+static int	split_insert_word(char **res, char const *s, char c)
+{
+	int	i;
+	int	j;
+	int	k;
+
+	i = 0;
+	j = 0;
+	while (s[i])
+	{
+		if (s[i] != c && (i == 0 || s[i - 1] == c))
+		{
+			k = i;
+			while (s[k] && s[k] != c)
+				k++;
+			res[j] = copy_word(s, i, k - i);
+			if (!res[j])
+				return (free_all(res, j), 0);
+			j++;
+			i = k;
+			continue ;
+		}
+		i++;
+	}
+	res[j] = NULL;
+	return (1);
+}
+
+char	**ft_split(char const *s, char c)
+{
+	char	**res;
+
+	if (!s)
+		return (NULL);
+	res = (char **)malloc(sizeof(char *) * (ft_countwords(s, c) + 1));
+	if (!res)
+		return (NULL);
+	if (!split_insert_word(res, s, c))
+		return (NULL);
+	return (res);
+}
+=== end of ft_split.c ===
+=== start of ft_strch.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_strch.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/04 14:12:22 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 14:13:59 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+char	*ft_strchr(const char *s, int c)
+{
+	int	i;
+
+	i = 0;
+	while (s[i] != '\0')
+	{
+		if (s[i] == (char) c)
+		{
+			return ((char *)&s[i]);
+		}
+		else
+			i++;
+	}
+	if ((char)c == '\0')
+	{
+		return ((char *)&s[i]);
+	}
+	return (0);
+}
+// int main()
+// {
+//     char str[] = "42 Porto";
+//     char *s = ft_strchr(str, 'P');
+//     printf("%s \n", s);
+// }=== end of ft_strch.c ===
+=== start of ft_strjoin.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_strjoin.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/23 15:25:31 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/04/23 16:21:21 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+size_t	ft_strlen(const char *c)
+{
+	int	i;
+
+	i = 0;
+	while (c[i] != '\0')
+	{
+		i++;
+	}
+	return (i);
+}
+
+void	*ft_memmove(void *dest, const void *src, size_t n)
+{
+	size_t		i;
+	char		*d;
+	const char	*s;
+
+	d = dest;
+	s = src;
+	if (!dest && !src)
+		return (NULL);
+	i = 0;
+	while ((d < s) && (i < n))
+	{
+		d[i] = s[i];
+		i++;
+	}
+	while ((d > s) && (n > 0))
+	{
+		n--;
+		d[n] = s[n];
+	}
+	return (dest);
+}
+
+char	*ft_strdup(const char *s1)
+{
+	char	*dup;
+	size_t	len;
+
+	len = ft_strlen(s1);
+	dup = (char *)malloc(sizeof(char) * (len + 1));
+	if (!dup)
+		return (NULL);
+	ft_memmove(dup, s1, len + 1);
+	return (dup);
+}
+
+char	*ft_strjoin(char const *s1, char const *s2)
+{
+	size_t	len_s1;
+	size_t	len_s2;
+	char	*strjoin;
+
+	len_s1 = ft_strlen((char *)s1);
+	len_s2 = ft_strlen((char *)s2);
+	strjoin = (char *)malloc(sizeof(char) * (len_s1 + len_s2 + 1));
+	if (strjoin == NULL)
+		return (0);
+	ft_memmove ((void *)strjoin, (const void *)s1, len_s1);
+	ft_memmove ((void *)strjoin + len_s1, (const void *)s2, len_s2 + 1);
+	return (strjoin);
+}
+// int main()
+// {
+// 	char s1[] = "Good";
+// 	char s2[] = " Morning";
+// 	char *rest;
+
+// 	rest = ft_strjoin(s1,s2);
+// 	printf("%s\n", rest);
+// 	free(rest);
+//     return 0;
+// }=== end of ft_strjoin.c ===
+=== start of ft_strncmp.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_strncmp.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/04/15 16:42:36 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/04/15 16:44:54 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+int	ft_strncmp(const char *s1, const char *s2, size_t n)
+{
+	size_t	i;
+
+	i = 0;
+	if (n <= 0)
+	{
+		return (0);
+	}
+	while ((i < n) && (s1[i] == s2[i]))
+	{
+		if (s1[i] == '\0' || s2[i] == '\0')
+			return (s1[i] - s2[i]);
+		i++;
+	}
+	if (i == n)
+	{
+		return (0);
+	}
+	return ((unsigned char) s1[i] - (unsigned char) s2[i]);
+}
+// int main()
+// {
+//     char    st1[] = "test\200";
+//     char    st2[] = "test\0";
+// 	unsigned int n = 6;
+// 	int	result;
+// 	result = ft_strncmp(st1,st2,n);
+// 	n = 4;
+//  result = ft_strncmp(st1,st2,n);
+//          printf("Result My funcion 1:%d \n", result);
+// 	// result = strncmp(st1,st2,n);
+//  printf("Result C 1:%d \n", result);
+//  printf("--------------------- \n");
+// 	n = 8;
+// 	result = ft_strncmp(st1,st2,n);
+//  printf("Result My funcion 2:%d \n", result);
+//  result = strncmp(st1,st2,n);
+//   printf("Result C 2:%d \n", result);
+// 	printf("--------------------- \n");
+// 	result = ft_strncmp(st1,st2, 9);
+//  printf("Result My funcion 2:%d \n", result);
+//  result = strncmp(st1,st2,9);
+//  printf("Result C 2:%d \n", result);
+// }=== end of ft_strncmp.c ===
+=== start of Makefile ===
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/06/20 13:49:55 by sade-ara          #+#    #+#              #
+#    Updated: 2025/07/04 14:53:33 by sade-ara         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+NAME = pipex
+
+CC = cc
+CFLAGS = -Wall -Wextra -Werror
+RM = rm -rf
+
+SRCS = pipex.c utils.c msg.c ft_split.c ft_strjoin.c ft_strncmp.c ft_strch.c child_process.c execute_cmd.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+
+clean:
+	$(RM) $(OBJS)
+
+fclean: clean
+	$(RM) $(NAME)
+
+re: fclean all
+
+PHONY: all clean fclean re=== end of Makefile ===
+=== start of msg.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   msg.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/01 15:04:03 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 14:44:01 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+void	error_and_exit(char *msg)
+{
+	perror(msg);
+	exit(EXIT_FAILURE);
+}
+
+void	msg_cmd_not_found(char *cmd)
+{
+	write(STDERR_FILENO, "Command '", 9);
+	write(STDERR_FILENO, cmd, ft_strlen(cmd));
+	write(STDERR_FILENO, "' not found.\n", 14);
+	exit(127);
+}
+
+void	msg_cmd_not_file(char *cmd)
+{
+	write(STDERR_FILENO, cmd, ft_strlen(cmd));
+	write(STDERR_FILENO, " No such file or directory. \n", 30);
+	exit(127);
+}
+=== end of msg.c ===
+=== start of pipex.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipex.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/20 13:50:53 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 15:40:24 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+static void	open_files(int *infile, int *outfile, char **argv)
+{
+	*infile = open(argv[1], O_RDONLY);
+	if (*infile < 0)
+	{
+		perror(argv[1]);
+		*outfile = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
+		if (*outfile < 0)
+		{
+			perror(argv[4]);
+			exit(1);
+		}
+		exit(0);
+	}
+	*outfile = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	if (*outfile < 0)
+	{
+		perror(argv[4]);
+		if (*infile >= 0)
+			close(*infile);
+		exit(1);
+	}
+}
+
+static void	process_pipes(char **argv, char **envp, int infile, int outfile)
+{
+	int		pipe_fds[2];
+	pid_t	pid1;
+	pid_t	pid2;
+
+	if (pipe(pipe_fds) == -1)
+		error_and_exit("pipe");
+	pid1 = fork();
+	if (pid1 < 0)
+		error_and_exit("fork");
+	if (pid1 == 0)
+		child1(infile, pipe_fds, argv[2], envp);
+	pid2 = fork();
+	if (pid2 < 0)
+		error_and_exit("fork");
+	if (pid2 == 0)
+		child2(outfile, pipe_fds, argv[3], envp);
+	close(pipe_fds[0]);
+	close(pipe_fds[1]);
+	if (infile >= 0)
+		close(infile);
+	if (outfile >= 0)
+		close(outfile);
+	wait_child(pid1, pid2);
+}
+
+int	main(int argc, char **argv, char **envp)
+{
+	int		infile;
+	int		outfile;
+
+	if (argc != 5)
+		return (1);
+	open_files(&infile, &outfile, argv);
+	process_pipes(argv, envp, infile, outfile);
+	return (0);
+}
+=== end of pipex.c ===
+=== start of pipex.h ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipex.h                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/20 13:50:42 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 14:13:44 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef PIPEX_H
+# define PIPEX_H
+
+# include <unistd.h>
+# include <stdlib.h>
+# include <fcntl.h>
+# include <stdio.h>
+# include <sys/wait.h>
+# include <string.h>
+# include <errno.h>
+
+size_t	ft_strlen(const char *c);
+char	*ft_strchr(const char *s, int c);
+char	**ft_split(char const *s, char c);
+char	*ft_strjoin(char const *s1, char const *s2);
+void	*ft_memmove(void *dest, const void *src, size_t n);
+int		ft_strncmp(const char *s1, const char *s2, size_t n);
+char	*ft_strdup(const char *s1);
+void	ft_free(char **arr);
+
+void	error_and_exit(char *msg);
+void	msg_cmd_not_found(char *cmd);
+void	msg_cmd_not_file(char *cmd);
+
+char	*get_path_env(char **envp);
+char	*join_and_check(char *path, char *cmd);
+char	*get_cmd_path(char *cmd, char **envp);
+void	execute_cmd(char *cmd_str, char **envp);
+char	*ft_strchr(const char *s, int c);
+
+void	wait_child(pid_t pid1, pid_t pid2);
+void	child1(int infile, int *pipefd, char *cmd, char **envp);
+void	child2(int outfile, int *pipefd, char *cmd, char **envp);
+
+#endif=== end of pipex.h ===
+=== start of README.md ===
+# Pipex
+![C Language](https://img.shields.io/badge/Language-C-blue.svg?style=flat)
+![Status: In Progress](https://img.shields.io/badge/Status-In%20Progress-FFD700?style=flat)
+![42 load/100](https://img.shields.io/badge/42-Load%2F100-FFD700?style=flat)
+![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat)
+-
+## 🧪 Projeto Pipex: Guia completo
+
+## 🧠 O que é o Pipex?
+
+O projeto Pipex tem como objetivo te ensinar como funciona a comunicação entre processos no Unix, utilizando pipes, forks e execução de comandos, tudo em C puro.
+
+Ele simula o seguinte comportamento do shell:
+```bash
+shell:< infile comando1 | comando2 > outfile
+./pipex infile "comando1" "comando2" outfile
+```
+
+## 🎯 Objetivo do projeto
+Criar um programa que:
+- Lê de um arquivo (infile)
+- Executa dois comandos em sequência, usando pipe entre eles
+- A saída do primeiro vira a entrada do segundo
+- Escreve o resultado final num arquivo (outfile)
+
+## 🔧 Tecnologias e funções obrigatórias
+Você deve usar:
+- open, close, read, write
+- pipe, dup2, fork, execve
+- access, perror, strerror, malloc, free
+- Manipulação de strings para dividir comandos
+
+Você não pode usar:
+- system()
+- popen(), execvp() e outros atalhos de execução
+
+## 🧱 Estrutura geral do programa
+int main(int argc, char **argv, char **envp)
+ - Argumentos da linha de comando: int argc, char **argv
+ - Variáveis de ambiente: char **envp
+
+
+Argumentos:
+- argv[1]: nome do arquivo de entrada 
+- argv[2]: primeiro comando (como string)
+- argv[3]: segundo comando (como string)
+- argv[4]: nome do arquivo de saída
+
+Exemplo: 
+./pipex infile "grep hello" "wc -l" outfile
+
+- argv[1]: "infile"
+- argv[2]: "grep hello" ← comando 1
+- argv[3]: "wc -l" ← comando 2
+- argv[4]: "outfile"
+
+Dividir o argv[2] e argv[3] usando ft_split()
+
+comando 1: "grep hello"
+
+char **cmd_args = ft_split("grep hello", ' ');
+
+- cmd_args[0] = "grep"
+- cmd_args[1] = "hello"
+- cmd_args[2] = NULL
+
+Encontrar o caminho do comando  dentro do PATH
+
+Usar execve() para executá-lo.
+ - execve("/usr/bin/grep", cmd_args, envp);
+
+## 🧠 Conceitos que você aprende com o Pipex
+- Como processos filhos são criados com fork()
+- Como eles se comunicam com pipe()
+- Como substituir um processo com execve()
+- Como redirecionar entrada e saída com dup2()
+- Como a shell funciona por baixo dos panos
+
+## 🛟 Dicas finais
+- Teste com comandos que funcionam sozinhos no terminal!
+- Valide erros: arquivos que não existem, comandos inválidos, etc.
+- Verifique se os descritores de ficheiro foram fechados corretamente!
+- Usa valgrind para garantir que não há vazamentos de memória
+```bash
+valgrind ./pipex
+```
+- Saida do valgrind:
+```bash
+==XXXXX== HEAP SUMMARY:
+==XXXXX==     in use at exit: 0 bytes in 0 blocks
+==XXXXX==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==XXXXX== 
+==XXXXX== All heap blocks were freed -- no leaks are possible
+==XXXXX== 
+==XXXXX== For lists of detected and suppressed errors, rerun with: -s
+==XXXXX== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```=== end of README.md ===
+=== start of test_pipex.sh ===
+#!/bin/bash
+
+# Necessario a permissao chmod +x test_pipex.sh
+# execute como ./test_pipex.sh
+# verificar problema de execucao
+# cat -vE ./test_pipex.sh | head -n 1
+# -> saida #!/bin/bash^M$ (erro)
+# sed -i 's/\r$//' ./test_pipex.sh
+
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+YEL="\033[0;33m"
+RESET="\033[0m"
+BOLD="\033[1m"
+BLU_BG="\033[1;37;44m"
+
+# print intro
+echo -e 
+echo -e "TESTER PIPEX EXERCICIO OBRIGATORIO"
+echo "----------------------------------------------"
+echo -e "Inicio do teste $(date +"%d %B %Y") $(date +%R)"
+echo -e "by $USER on $os os"
+echo -e "made by Samiris (github.com/SamirisSantos)"
+echo "----------------------------------------------"
+
+# Executa o make
+MAKE_OUTPUT=$(make 2>&1)
+MAKE_EXIT_CODE=$?
+
+# Verifica se o make teve sucesso
+if [ $MAKE_EXIT_CODE -ne 0 ]; then
+	echo -e "${BLU_BG} Makefile ${RESET}   ===> ${RED}Erro: Make falhou: ${BOLD}TESTE CANCELADO.${RESET}"
+	echo -e "$MAKE_OUTPUT"
+	exit 1
+else
+	echo -e "${BLU_BG} Makefile ${RESET}   ===> ${GREEN}${BOLD}OK!${RESET}"
+fi
+
+# Verifica Norminette
+NORMI_OUTPUT=$(find . | egrep ".*(\.c|\.h)$" | norminette)
+
+if [[ $(echo "$NORMI_OUTPUT" | egrep -v "OK\!$") ]]; then
+    echo -e "${BLU_BG} Norminette ${RESET} ===> ${RED}${BOLD}Erro:${RESET}"
+    echo -e "$NORMI_OUTPUT" | egrep -v "OK\!$"
+else
+    echo -e "${BLU_BG} Norminette ${RESET} ===> ${GREEN}${BOLD}OK!${RESET}"
+fi
+
+# Cria o infile.txt
+cat <<EOF > infile.txt
+hello world
+this is a test
+another hello line
+goodbye
+HELLO in uppercase
+hello world
+EOF
+
+echo -ne "\n${BLU_BG} Argumento (argc != 5): ${RESET}\n"
+./pipex infile.txt "wc -l" outfile.txt > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo -e "Teste 1 – argc < 5 ===> ${GREEN}${BOLD}OK!${RESET}"
+else
+    echo -e "Teste 1 – argc < 5 ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+./pipex infile.txt "ls" "grep x" "cat" outfile.txt > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo -e "Teste 2 – argc > 5 ===> ${GREEN}${BOLD}OK!${RESET}"
+else
+    echo -e "Teste 2 – argc > 5 ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+# Cria o infile.txt
+cat <<EOF > infile.txt
+hello world
+this is a test
+another hello line
+goodbye
+HELLO in uppercase
+hello world
+EOF
+# Teste Basico
+echo -ne "\n${BLU_BG} Teste Basico: ${RESET}\n"
+
+# Teste 1 – grep hello | wc -l
+./pipex infile.txt "grep hello" "wc -l" outfile.txt
+expected="3"
+actual=$(cat outfile.txt)
+exit_code=$?
+
+if [[ "$actual" == "$expected" ]]; then
+	echo -ne "Teste 1 – grep hello | wc -l  ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 0 ]]; then
+		echo -e "${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(0) esperado${RESET}"
+	else
+		echo -e "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+else
+	echo -e "Teste 1 – grep hello | wc -l  ===> ${RED}${BOLD}KO!${RESET}"
+	echo -ne "Esperado:\n$expected"
+	echo -ne "Recebido:\n$actual"
+	echo -e "exit(): $exit_code"
+fi
+
+# Teste 2 – cat | wc -l"
+./pipex infile.txt "cat" "wc -l" outfile.txt
+expected="6"
+actual=$(cat outfile.txt)
+exit_code=$?
+
+if [[ "$actual" == "$expected" ]]; then
+	echo -ne "Teste 2 – cat | wc -l         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 0 ]]; then
+		echo -e "${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(0) esperado${RESET}"
+	else
+		echo -e "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+else
+	echo -e "Teste 2 – cat | wc -l        ===> ${RED}${BOLD}KO!${RESET}"
+	echo -ne "Esperado:\n$expected"
+	echo -ne "Recebido:\n$actual"
+	echo -e "exit(): $exit_code"
+fi
+
+# Teste 3 – grep hello | sort"
+./pipex infile.txt "grep hello" "sort" outfile.txt
+expected=$(
+  echo -e "another hello line\nhello world\nhello world"
+)
+actual=$(cat outfile.txt)
+exit_code=$?
+
+if [[ "$actual" == "$expected" ]]; then
+	echo -ne "Teste 3 – grep hello | sort   ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 0 ]]; then
+		echo -e "${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(0) esperado${RESET}"
+	else
+		echo -e "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+else
+	echo -e "Teste 3 – grep hello | sort  ===> ${RED}${BOLD}KO!${RESET}"
+	echo -ne "Esperado:\n$expected"
+	echo -ne "Recebido:\n$actual"
+	echo -e "exit(): $exit_code"
+fi
+
+# Teste cmd
+echo -ne "\n${BLU_BG} Teste dos cmd ${RESET}\n"
+
+# Teste 1: cmd1 e cmd2 não existem
+./pipex infile.txt "catty" "asdfg" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: cmd1 e cmd2 não existem      ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}${BOLD} KO!${RESET} ${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 1: cmd1 e cmd2 não existem      ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 2: cmd1 e cmd2 vazio
+./pipex infile.txt " " " " outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 2: cmd1 e cmd2 vazios           ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}${BOLD} KO!${RESET} ${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 2: cmd1 e cmd2 vazios           ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 3: cmd1 existe e cmd2 não existe
+./pipex infile.txt "grep hello" "asdfg" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 3: cmd2 não existe              ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}${BOLD} KO!${RESET} ${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 3: cmd2 não existe              ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 4: cmd1 existe e cmd2 vazio
+./pipex infile.txt "grep hello" " " outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 4: cmd2 vazio                   ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}${BOLD} KO!${RESET} ${YEL}exit($exit_code) inesperado${RESET}"
+		echo -ne "  ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 4: cmd2 vazio                   ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 5: cmd1 vazio e cmd2 existe
+./pipex infile.txt " " "grep hello" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 5: cmd1 vazio                   ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 1 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 5: cmd1 vazio                   ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 6: cmd1 não existe e cmd2 grep
+./pipex infile.txt "catty" "grep hello" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 6: cmd1 não existe e cmd2 grep  ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 1 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 6: cmd1 não existe e cmd2 grep  ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 7: cmd1 vazio e cmd2 grep
+./pipex infile.txt " " "grep hello" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 7: cmd1 vazio e cmd2 grep       ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 1 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 7: cmd1 vazio e cmd2 grep       ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 8: cmd1 não existe e cmd2 outro comando
+./pipex infile.txt "catty" "touch oi.txt" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 8: cmd1 não existe e cmd2!=grep ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 8: cmd1 não existe e cmd2!=grep ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste 9: cmd1 vazio e cmd2 grep
+./pipex infile.txt " " "touch oi.txt" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 9: cmd1 vazio e cmd2!=grep      ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 9: cmd1 vazio e cmd2!=grep      ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "command.*not found" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: Command not found${RESET}"
+fi
+
+# Teste PATH cmd
+echo -ne "\n${BLU_BG} Teste PATH cmd: ${RESET}\n"
+
+# Teste 1: cmd1 e cmd2 PATH existe
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: cmd1 e cmd2 PATH existe      ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 0 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -e "   ${BOLD}${YEL}exit(0) esperado${RESET}"
+	else
+		echo -e "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -e "Teste 1: cmd1 e cmd2 PATH existe      ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+# Teste 2: cmd1 PATH não existe
+./pipex infile.txt "/usr/bin/les" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 2: cmd1 PATH não existe         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 2: cmd1 PATH não existe         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+normalized=$(tr '[:upper:]' '[:lower:]' < stderr.txt | tr -d '[:punct:]' | tr '\0' ' ' | awk '{$1=$1};1')
+expected="no such file or directory"
+
+if [[ "$normalized" == *"$expected"* ]]; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: No such file or directory${RESET}"
+fi
+
+# Teste 3: cmd2 PATH não existe
+./pipex infile.txt "/usr/bin/cat" "/usr/bin/outro" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 3: cmd2 PATH não existe         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -ne 127 ]]; then
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(127) esperado${RESET}"
+	else
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	fi
+	else
+		echo -ne "Teste 3: cmd2 PATH não existe         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if [[ "$normalized" == *"$expected"* ]]; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada: No such file or directory${RESET}"
+fi
+
+rm -f infile.txt outfile.txt stdout.txt stderr.txt oi.txt teste.txt
+
+# Teste infile.txt
+echo -ne "\n${BLU_BG} Teste infile.txt: ${RESET}\n"
+
+# Cria o infile.txt
+cat <<EOF > infile.txt
+hello world
+Here is some content
+hello world
+EOF
+chmod a-r infile.txt
+
+# Teste 1: infile sem permissao escrita
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: infile sem permissao escrita         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -eq 0 || $exit_code -eq 13 ]]; then
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	else
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(0) ou exit(13) esperado${RESET}"
+	fi
+	else
+		echo -ne "Teste 1: infile sem permissao escrita         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "permission denied" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada permission denied${RESET}"
+fi
+
+rm -f infile.txt outfile.txt stdout.txt stderr.txt
+
+# Teste 2: infile nao existe
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 2: infile nao existe                    ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -eq 0 ]]; then
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	else
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(0) esperado${RESET}"
+	fi
+	else
+		echo -ne "Teste 2: infile nao existe                    ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "no such file or directory" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada no such file or directory${RESET}"
+fi
+
+# Teste outfile sem escrita
+echo -ne "\n${BLU_BG} Teste infile sem escrita: ${RESET}\n"
+
+# Cria o infile.txt
+cat <<EOF > infile.txt
+hello world
+Here is some content
+hello world
+EOF
+
+# Teste 1: outfile sem permissao escrita
+touch outfile.txt
+chmod a-w outfile.txt
+./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
+exit_code=$?
+if [[ -f outfile.txt ]]; then
+	echo -ne "Teste 1: outfile sem permissao escrita         ===> ${GREEN}${BOLD}OK!${RESET}"
+	if [[ $exit_code -eq 1 || $exit_code -eq 13 ]]; then
+		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
+	else
+		echo -ne "${YEL}  exit($exit_code) ${YEL}${BOLD} KO!${RESET}${RESET}"
+		echo -ne "   ${BOLD}${YEL}exit(1) ou exit(13) esperado${RESET}"
+	fi
+	else
+		echo -ne "Teste 1: outfile sem permissao escrita         ===> ${RED}${BOLD}KO!${RESET}"
+fi
+
+if grep -iq "permission denied" stderr.txt; then
+  echo -e "  Mensagem ${GREEN}${BOLD}OK!${RESET}"
+else
+  echo -e "  ${YEL}Mensagem esperada permission denied${RESET}"
+fi
+
+rm -f infile.txt outfile.txt stdout.txt stderr.txt
+make clean > /dev/null 2>&1=== end of test_pipex.sh ===
+=== start of utils.c ===
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/25 10:10:59 by sade-ara          #+#    #+#             */
+/*   Updated: 2025/07/04 14:52:38 by sade-ara         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+char	*get_path_env(char **envp)
+{
+	int		i;
+
+	i = 0;
+	if (!envp)
+		return (NULL);
+	while (envp[i])
+	{
+		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
+			return (envp[i] + 5);
+		i++;
+	}
+	return (NULL);
+}
+
+char	*join_and_check(char *path, char *cmd)
+{
+	char	*temp;
+	char	*full_path;
+
+	temp = ft_strjoin(path, "/");
+	if (!temp)
+		return (NULL);
+	full_path = ft_strjoin(temp, cmd);
+	free(temp);
+	if (!full_path)
+		return (NULL);
+	if (access(full_path, X_OK) == 0)
+		return (full_path);
+	free(full_path);
+	return (NULL);
+}
+
+void	ft_free(char **res)
+{
+	int	i;
+
+	i = 0;
+	while (res[i])
+	{
+		free(res[i]);
+		i++;
+	}
+	free(res);
+}
+
+char	*get_cmd_path(char *cmd, char **envp)
+{
+	char	**paths;
+	char	*path_env;
+	char	*full_path;
+	int		i;
+
+	path_env = get_path_env(envp);
+	if (!path_env)
+		return (NULL);
+	if (access(cmd, X_OK) == 0)
+		return (ft_strdup(cmd));
+	paths = ft_split(path_env, ':');
+	i = 0;
+	while (paths[i])
+	{
+		full_path = join_and_check(paths[i], cmd);
+		if (full_path)
+		{
+			ft_free(paths);
+			return (full_path);
+		}
+		i++;
+	}
+	ft_free(paths);
+	return (NULL);
+}
+=== end of utils.c ===

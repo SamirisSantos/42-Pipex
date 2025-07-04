@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:10:59 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 13:55:55 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/07/04 14:52:38 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,30 +85,4 @@ char	*get_cmd_path(char *cmd, char **envp)
 	}
 	ft_free(paths);
 	return (NULL);
-}
-
-void	execute_cmd(char *cmd_str, char **envp)
-{
-	char	**cmd_args;
-	char	*cmd_path;
-
-	cmd_args = ft_split(cmd_str, ' ');
-	if (!cmd_args || !cmd_args[0])
-	{
-		ft_free(cmd_args);
-		msg_cmd_not_found(cmd_str);
-	}
-	cmd_path = get_cmd_path(cmd_args[0], envp);
-	if (!cmd_path)
-	{
-		ft_free(cmd_args);
-		msg_cmd_not_found(cmd_str);
-	}
-	execve(cmd_path, cmd_args, envp);
-	perror("pipex");
-	ft_free(cmd_args);
-	free(cmd_path);
-	if (errno == EACCES)
-		exit(126);
-	exit(127);
 }

@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:42 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 14:15:10 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/07/04 14:13:44 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 # include <errno.h>
 
 size_t	ft_strlen(const char *c);
+char	*ft_strchr(const char *s, int c);
 char	**ft_split(char const *s, char c);
 char	*ft_strjoin(char const *s1, char const *s2);
 void	*ft_memmove(void *dest, const void *src, size_t n);
@@ -31,6 +32,7 @@ void	ft_free(char **arr);
 
 void	error_and_exit(char *msg);
 void	msg_cmd_not_found(char *cmd);
+void	msg_cmd_not_file(char *cmd);
 
 char	*get_path_env(char **envp);
 char	*join_and_check(char *path, char *cmd);

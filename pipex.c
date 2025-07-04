@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/20 13:50:53 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/07/03 15:53:32 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/07/04 15:40:24 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,14 @@ static void	open_files(int *infile, int *outfile, char **argv)
 	*infile = open(argv[1], O_RDONLY);
 	if (*infile < 0)
 	{
+		perror(argv[1]);
 		*outfile = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
 		if (*outfile < 0)
 		{
 			perror(argv[4]);
-			close(*infile);
 			exit(1);
 		}
-		perror(argv[1]);
-		close(*infile);
-		exit(1);
+		exit(0);
 	}
 	*outfile = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	if (*outfile < 0)
@@ -58,8 +56,10 @@ static void	process_pipes(char **argv, char **envp, int infile, int outfile)
 		child2(outfile, pipe_fds, argv[3], envp);
 	close(pipe_fds[0]);
 	close(pipe_fds[1]);
-	close(infile);
-	close(outfile);
+	if (infile >= 0)
+		close(infile);
+	if (outfile >= 0)
+		close(outfile);
 	wait_child(pid1, pid2);
 }
 

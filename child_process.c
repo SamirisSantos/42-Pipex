@@ -6,7 +6,7 @@
 /*   By: sade-ara <sade-ara@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/29 14:20:16 by sade-ara          #+#    #+#             */
-/*   Updated: 2025/06/30 11:59:20 by sade-ara         ###   ########.fr       */
+/*   Updated: 2025/07/04 14:59:21 by sade-ara         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,21 +14,21 @@
 
 void	child1(int infile, int *pipefd, char *cmd, char **envp)
 {
+	close(pipefd[0]);
 	dup2(infile, STDIN_FILENO);
 	dup2(pipefd[1], STDOUT_FILENO);
-	close(pipefd[0]);
-	close(pipefd[1]);
 	close(infile);
+	close(pipefd[1]);
 	execute_cmd(cmd, envp);
 }
 
 void	child2(int outfile, int *pipefd, char *cmd, char **envp)
 {
+	close(pipefd[1]);
 	dup2(pipefd[0], STDIN_FILENO);
 	dup2(outfile, STDOUT_FILENO);
-	close(pipefd[0]);
-	close(pipefd[1]);
 	close(outfile);
+	close(pipefd[0]);
 	execute_cmd(cmd, envp);
 }
 
