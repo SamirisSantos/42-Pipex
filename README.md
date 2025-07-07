@@ -76,6 +76,10 @@ Usar execve() para executá-lo.
 - Como redirecionar entrada e saída com dup2()
 - Como a shell funciona por baixo dos panos
 
+## 🧪 Tester Pipex Obrigatório
+
+[Acesse aqui](https://github.com/SamirisSantos/42-Pipex-Tester)
+
 ## 🛟 Dicas finais
 - Teste com comandos que funcionam sozinhos no terminal!
 - Valide erros: arquivos que não existem, comandos inválidos, etc.
