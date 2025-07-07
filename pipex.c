@@ -24,6 +24,7 @@ static void	open_files(int *infile, int *outfile, char **argv)
 			perror(argv[4]);
 			exit(1);
 		}
+		close(*outfile);
 		exit(0);
 	}
 	*outfile = open(argv[4], O_CREAT | O_WRONLY | O_TRUNC, 0644);

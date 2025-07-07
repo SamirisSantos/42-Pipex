@@ -7,8 +7,6 @@
 # -> saida #!/bin/bash^M$ (erro)
 # sed -i 's/\r$//' ./test_pipex.sh
 
-#vlgppx='/usr/bin/valgrind --trace-children=yes --leak-check=full --track-fds=yes'
-
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 YEL="\033[0;33m"
@@ -422,7 +420,7 @@ chmod a-r infile.txt
 ./pipex infile.txt "/usr/bin/ls" "/usr/bin/cat" outfile.txt > stdout.txt 2> stderr.txt
 exit_code=$?
 if [[ -f outfile.txt ]]; then
-	echo -ne "Teste 1: infile sem permissao escrita         ===> ${GREEN}${BOLD}OK!${RESET}"
+	echo -ne "Teste 1: infile sem permissao leitura         ===> ${GREEN}${BOLD}OK!${RESET}"
 	if [[ $exit_code -eq 0 || $exit_code -eq 13 ]]; then
 		echo -ne "  exit($exit_code) ${GREEN}${BOLD}OK!${RESET}"
 	else
@@ -430,7 +428,7 @@ if [[ -f outfile.txt ]]; then
 		echo -ne "   ${BOLD}${YEL}exit(0) ou exit(13) esperado${RESET}"
 	fi
 	else
-		echo -ne "Teste 1: infile sem permissao escrita         ===> ${RED}${BOLD}KO!${RESET}"
+		echo -ne "Teste 1: infile sem permissao leitura         ===> ${RED}${BOLD}KO!${RESET}"
 fi
 
 if grep -iq "permission denied" stderr.txt; then
@@ -463,7 +461,7 @@ else
 fi
 
 # Teste outfile sem escrita
-echo -ne "\n${BLU_BG} Teste infile sem escrita: ${RESET}\n"
+echo -ne "\n${BLU_BG} Teste Outfile.txt: ${RESET}\n"
 
 # Cria o infile.txt
 cat <<EOF > infile.txt
@@ -495,5 +493,48 @@ else
   echo -e "  ${YEL}Mensagem esperada permission denied${RESET}"
 fi
 
-rm -f infile.txt outfile.txt stdout.txt stderr.txt
+rm -f outfile.txt stdout.txt stderr.txt
+
+# Teste valgrind
+VALGRIND="valgrind --trace-children=yes --leak-check=full --track-fds=yes --error-exitcode=42"
+
+touch oufile.txt
+
+$VALGRIND ./pipex infile.txt cat "wc -l" outfile.txt > /dev/null 2> valgrind.log
+EXIT_CODE=$?
+
+LEAK=0
+FD=0
+
+echo -ne "\n${BLU_BG} Teste Valgrind: ${RESET}"
+
+# Verifica se houve vazamento de memória
+if grep -q "in use at exit: [^0]" valgrind.log; then
+    LEAK=1
+fi
+
+# Verifica se há file descriptors não fechados (acima de 3 padrão)
+if grep -q "FILE DESCRIPTORS: [4-9]" valgrind.log; then
+    FD=1
+fi
+
+# Resultado
+if [[ $LEAK -eq 0 && $FD -eq 0 && $EXIT_CODE -ne 42 ]]; then
+    echo -e " ===> ${GREEN}${BOLD} OK!${RESET}"
+else
+    echo -ne "Teste 1 ===>  ${YEL}${BOLD} KO!${RESET}${RESET}"
+    if [[ $LEAK -eq 1 && $FD -eq 1 ]]; then
+        echo "leak + open fd"
+    elif [[ $LEAK -eq 1 ]]; then
+        echo "leak"
+    elif [[ $FD -eq 1 ]]; then
+        echo "open fd"
+    elif [[ $EXIT_CODE -eq 42 ]]; then
+        echo "valgrind error"
+    else
+        echo "erro desconhecido"
+    fi
+fi
+
+rm -f valgrind.log infile.txt outfile.txt outfile.txt
 make clean > /dev/null 2>&1
