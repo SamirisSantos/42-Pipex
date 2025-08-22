@@ -1,7 +1,7 @@
 # Pipex
 ![C Language](https://img.shields.io/badge/Language-C-blue.svg?style=flat)
-![Status: In Progress](https://img.shields.io/badge/Status-In%20Progress-FFD700?style=flat)
-![42 load/100](https://img.shields.io/badge/42-Load%2F100-FFD700?style=flat)
+ ![Status: Completed](https://img.shields.io/badge/Status-In%20Progress-FFD700?style=flat)
+![100/100](https://img.shields.io/badge/42-Load%2F100-FFD700?style=flat)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat)
 -
 ## 🧪 Projeto Pipex: Guia completo
